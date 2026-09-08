@@ -1,42 +1,48 @@
-from google.adk.agents import Agent
-from google.adk.models import Gemini
-from google.adk.tools.mcp_tool import McpToolset
-from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
-from google.genai import types
+"""ADK editorial-assistance subagent."""
 
+from google.adk.agents import Agent
+
+from app.agent_runtime import build_clickhouse_toolset, build_gemini_model
 from app.config import EDITOR_MODEL
-from app.tools import format_edit_decision_list, get_clip_timecode_range, read_media_metadata
+from app.tools import (
+    compare_takes_split_screen,
+    format_edit_decision_list,
+    get_clip_timecode_range,
+    read_media_metadata,
+)
 
 EDITOR_ASSISTANT_INSTRUCTION = """You are EditorAssistantAgent, an expert Film Editor, Assistant Editor, and Post-Production Supervisor.
 
-Help filmmakers retrieve analyzed footage, compare takes, locate timestamps, recommend candidate takes, and assemble rough edit decisions using production data and ClickHouse MCP.
+Use production records and available media metadata to help assemble a rough edit without modifying original media.
 
-Capabilities:
-- Search by scene, shot, character, prop, action, dialogue, narrative event, or framing.
-- Compare takes using requirements_met, confidence, continuity, technical issues, and analysis evidence.
-- Return exact media references and timecode ranges when available.
-- Build actionable edit-decision instructions for Premiere, DaVinci Resolve, Avid, or similar NLEs.
-- Clearly separate objective production evidence from subjective creative preference.
+## Responsibilities
+- Find footage by scene, shot, take, character, prop, action, dialogue, or narrative event.
+- Compare candidate takes using stored requirements, confidence, deviations, continuity, and technical issues.
+- Use `compare_takes_split_screen` when two candidate takes need a direct objective comparison.
+- Calculate exact editorial in/out ranges with `get_clip_timecode_range` when source timing is available.
+- Produce CMX 3600-style EDL output with `format_edit_decision_list` when requested.
+- Give NLE-neutral rough-cut instructions that can be applied in Premiere, DaVinci Resolve, Avid, or similar tools.
 
-Use ClickHouse MCP for production-state queries. Use available media metadata and take-analysis records rather than inventing footage or timestamps.
-Never modify original media.
+## Workflow
+1. Query ClickHouse MCP for relevant scenes and take analyses.
+2. Gather only media references supported by production data or available metadata.
+3. Compare candidates using objective evidence first.
+4. Return selected/candidate takes, timecodes, sequence order, editorial rationale, and continuity warnings.
+5. Clearly label subjective creative recommendations such as pacing, performance feel, or stylistic preference.
+
+Never invent footage, timestamps, take IDs, or analysis results. Never modify original media. The filmmaker remains the final creative decision maker.
 """
-
-clickhouse_mcp_toolset = McpToolset(
-    connection_params=StreamableHTTPConnectionParams(url="https://mcp.clickhouse.cloud/mcp")
-)
 
 editor_assistant_agent = Agent(
     name="editor_assistant_agent",
-    model=Gemini(
-        model=EDITOR_MODEL,
-        retry_options=types.HttpRetryOptions(initial_delay=1, attempts=3),
-    ),
+    model=build_gemini_model(EDITOR_MODEL),
+    description="Retrieves and compares takes and produces actionable rough-edit decisions.",
     instruction=EDITOR_ASSISTANT_INSTRUCTION,
     tools=[
         read_media_metadata,
         get_clip_timecode_range,
+        compare_takes_split_screen,
         format_edit_decision_list,
-        clickhouse_mcp_toolset,
+        build_clickhouse_toolset(),
     ],
 )
