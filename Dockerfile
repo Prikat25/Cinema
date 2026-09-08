@@ -9,6 +9,8 @@ WORKDIR /app
 
 COPY pyproject.toml README.md ./
 COPY app ./app
+COPY production_plans ./production_plans
+COPY sample_screenplay.txt ./
 
 RUN pip install --upgrade pip \
     && pip install .
