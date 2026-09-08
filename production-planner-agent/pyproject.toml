@@ -1,12 +1,11 @@
 [project]
 name = "production-supervisor-agent"
 version = "0.1.0"
-description = ""
+description = "CineSupervisor AI film production supervisor"
 authors = [
-    {name = "Your Name", email = "your@email.com"},
+    {name = "CineSupervisor", email = "team@example.com"},
 ]
-
-
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "google-adk[gcp,otel-gcp,mcp]>=2.6.0,<3.0.0",
     "mcp>=1.0.0",
@@ -16,9 +15,10 @@ dependencies = [
     "a2a-sdk[http-server]>=1.0,<2",
     "aiohttp>=3.13.4",
     "google-cloud-logging>=3.12.0,<4.0.0",
+    "streamlit>=1.30.0",
+    "google-genai>=0.2.0",
+    "python-dotenv>=1.0.0",
 ]
-requires-python = ">=3.11,<3.14"
-
 
 [dependency-groups]
 dev = [
@@ -43,33 +43,18 @@ line-length = 88
 target-version = "py311"
 
 [tool.ruff.lint]
-select = [
-    "E",   # pycodestyle
-    "F",   # pyflakes
-    "W",   # pycodestyle warnings
-    "I",   # isort
-    "C",  # flake8-comprehensions
-    "B",   # flake8-bugbear
-    "UP", # pyupgrade
-    "RUF", # ruff specific rules
-]
-ignore = ["E501", "C901", "B006"] # ignore line too long, too complex
+select = ["E", "F", "W", "I", "C", "B", "UP", "RUF"]
+ignore = ["E501", "C901", "B006"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app", "frontend"]
 
 [tool.ty]
-# ty is Astral's Rust-based type checker (same team as ruff/uv)
-# See: https://docs.astral.sh/ty/
-
 [tool.ty.environment]
-python-version = "3.10"
-
+python-version = "3.11"
 [tool.ty.src]
 exclude = [".venv/**"]
-
 [tool.ty.rules]
-# Ignore common issues with third-party libraries and dynamic code patterns
 unresolved-import = "ignore"
 unresolved-attribute = "ignore"
 invalid-argument-type = "ignore"
@@ -83,17 +68,13 @@ deprecated = "ignore"
 ignore-words-list = "rouge"
 skip = "./locust_env/*,uv.lock,.venv,./frontend,**/package-lock.json"
 
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
 
 [tool.pytest.ini_options]
 pythonpath = "."
 asyncio_default_fixture_loop_scope = "session"
 
 [tool.hatch.build.targets.wheel]
-packages = ["app","frontend"]
-
-
+packages = ["app"]
