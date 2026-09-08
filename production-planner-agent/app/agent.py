@@ -2,7 +2,7 @@ from google.adk import Agent
 from google.adk.apps import App
 
 from app.config import APP_NAME, SUPERVISOR_MODEL
-from app.editor_assisstant import editor_assistant_agent
+from app.editor_assistant import editor_assistant_agent
 from app.production_planner import production_planner_agent
 from app.take_analyzer import take_analyzer_agent
 
@@ -42,11 +42,7 @@ Connect planning requirements with take-analysis results and editor recommendati
 9. AUTHORITY
 You are an AI production assistant, not the final creative authority. Do not call artistic choices objectively good or bad unless explicitly framing them as a subjective recommendation.
 """,
-    sub_agents=[
-        production_planner_agent,
-        take_analyzer_agent,
-        editor_assistant_agent,
-    ],
+    sub_agents=[production_planner_agent, take_analyzer_agent, editor_assistant_agent],
 )
 
 app = App(root_agent=root_agent, name=APP_NAME)
