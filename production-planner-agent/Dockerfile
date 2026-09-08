@@ -8,12 +8,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY pyproject.toml README.md ./
-COPY app/requirements.txt ./app/requirements.txt
 COPY app ./app
 
 RUN pip install --upgrade pip \
-    && pip install -r app/requirements.txt \
-    && pip install -e .
+    && pip install .
 
 # Cloud Run supplies PORT at runtime; Streamlit must bind to 0.0.0.0.
 EXPOSE 8080
