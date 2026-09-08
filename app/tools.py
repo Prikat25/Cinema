@@ -1,9 +1,7 @@
-# Copyright 2026 Google LLC
-# Licensed under the Apache License, Version 2.0
-
 """Shared production tools used by CineSupervisor and its subagents."""
 
 import json
+import re
 import subprocess
 from pathlib import Path
 from typing import Any, Optional
@@ -15,6 +13,7 @@ from app.config import (
     CLICKHOUSE_PASSWORD,
     CLICKHOUSE_PORT,
     CLICKHOUSE_SECURE,
+    CLICKHOUSE_USER,
 )
 
 _client = None
@@ -26,16 +25,14 @@ def get_clickhouse_client():
     global _client
     if _client is not None:
         return _client
-
     if not CLICKHOUSE_HOST:
         raise RuntimeError("CLICKHOUSE_HOST is not configured")
-
     _client = clickhouse_connect.get_client(
         host=CLICKHOUSE_HOST,
-        port=int(CLICKHOUSE_PORT or 8123),
-        username=__import__("app.config", fromlist=["CLICKHOUSE_USER"]).CLICKHOUSE_USER or "default",
+        port=CLICKHOUSE_PORT,
+        username=CLICKHOUSE_USER or "default",
         password=CLICKHOUSE_PASSWORD or "",
-        secure=str(CLICKHOUSE_SECURE or "false").lower() in {"true", "1", "yes"},
+        secure=CLICKHOUSE_SECURE,
     )
     return _client
 
@@ -76,9 +73,10 @@ def ensure_clickhouse_tables(client=None):
 
 def seconds_to_smpte(seconds: float, fps: float = 24.0) -> str:
     """Convert seconds to HH:MM:SS:FF SMPTE timecode."""
-    total_frames = int(round(float(seconds) * fps))
-    frames = total_frames % int(fps)
-    total_seconds = total_frames // int(fps)
+    fps_int = max(1, int(round(fps)))
+    total_frames = max(0, int(round(float(seconds) * fps)))
+    frames = total_frames % fps_int
+    total_seconds = total_frames // fps_int
     return f"{total_seconds // 3600:02d}:{(total_seconds // 60) % 60:02d}:{total_seconds % 60:02d}:{frames:02d}"
 
 
@@ -86,8 +84,10 @@ def smpte_to_seconds(timecode: str, fps: float = 24.0) -> float:
     """Convert HH:MM:SS:FF SMPTE timecode to seconds."""
     try:
         h, m, s, f = map(int, timecode.strip().split(":"))
-        return ((h * 3600) + (m * 60) + s) + f / float(fps)
-    except (ValueError, TypeError):
+        if min(h, m, s, f) < 0 or f >= int(round(fps)):
+            return 0.0
+        return (h * 3600) + (m * 60) + s + f / float(fps)
+    except (ValueError, TypeError, AttributeError):
         return 0.0
 
 
@@ -104,7 +104,7 @@ def read_screenplay_file(file_path: str) -> dict:
 
 
 def read_media_metadata(file_path: str) -> dict:
-    """Inspect video/audio metadata, using ffprobe when available."""
+    """Inspect video/audio metadata with ffprobe when available."""
     path = Path(file_path)
     if not path.exists():
         return {
@@ -133,9 +133,9 @@ def read_media_metadata(file_path: str) -> dict:
         streams = probe.get("streams", [])
         video = next((s for s in streams if s.get("codec_type") == "video"), {})
         audio = next((s for s in streams if s.get("codec_type") == "audio"), {})
-        r_fps = video.get("r_frame_rate", "24/1")
+        rate = video.get("r_frame_rate", "24/1")
         try:
-            num, den = r_fps.split("/")
+            num, den = rate.split("/")
             fps = float(num) / float(den) if float(den) else 24.0
         except (ValueError, ZeroDivisionError):
             fps = 24.0
@@ -158,7 +158,7 @@ def get_clip_timecode_range(media_path: str, start_seconds: Optional[float] = No
     """Calculate editorial in/out timecodes for a media clip."""
     start = max(0.0, float(start_seconds if start_seconds is not None else 0.0))
     end = float(end_seconds if end_seconds is not None else start + 10.0)
-    if end < start:
+    if end <= start:
         end = start + 5.0
     duration = end - start
     base = smpte_to_seconds(base_timecode, fps)
@@ -171,27 +171,40 @@ def get_clip_timecode_range(media_path: str, start_seconds: Optional[float] = No
     }
 
 
+def _event_value(event: dict, *names: str, default=None):
+    for name in names:
+        value = event.get(name)
+        if value not in (None, ""):
+            return value
+    return default
+
+
 def format_edit_decision_list(events: list[dict], sequence_title: str = "EDITORIAL_ASSEMBLY", fps: float = 24.0) -> str:
-    """Format editorial events as a CMX 3600 EDL."""
+    """Format editorial events as a CMX 3600 EDL.
+
+    Accepts both backend names (src_in/src_out/rec_in/rec_out/editor_note)
+    and Streamlit/UI names (source_in/source_out/record_in/record_out/comment).
+    """
     lines = [f"TITLE: {sequence_title.upper()}", "FCM: NON-DROP FRAME", ""]
     record_seconds = smpte_to_seconds("01:00:00:00", fps)
     for idx, event in enumerate(events, start=1):
-        reel = (event.get("reel") or "AX")[:8].ljust(8)
-        track = str(event.get("track", "V")).ljust(4)
-        transition = "D   024" if "DISSOLVE" in str(event.get("transition", "C")).upper() else "C"
-        src_in = event.get("src_in") or event.get("in_point") or "01:00:00:00"
-        src_out = event.get("src_out") or event.get("out_point") or "01:00:05:00"
+        reel = str(_event_value(event, "reel", "clip_reel", default="AX"))[:8].ljust(8)
+        track = str(_event_value(event, "track", default="V"))[:4].ljust(4)
+        transition_name = str(_event_value(event, "transition", default="C")).upper()
+        transition = "D   024" if "DISSOLVE" in transition_name else "C"
+        src_in = _event_value(event, "src_in", "in_point", "source_in", default="01:00:00:00")
+        src_out = _event_value(event, "src_out", "out_point", "source_out", default="01:00:05:00")
         duration = smpte_to_seconds(src_out, fps) - smpte_to_seconds(src_in, fps)
         if duration <= 0:
             duration = 4.0
-        rec_in = event.get("rec_in") or seconds_to_smpte(record_seconds, fps)
-        rec_out = event.get("rec_out") or seconds_to_smpte(record_seconds + duration, fps)
+        rec_in = _event_value(event, "rec_in", "record_in", default=seconds_to_smpte(record_seconds, fps))
+        rec_out = _event_value(event, "rec_out", "record_out", default=seconds_to_smpte(record_seconds + duration, fps))
         record_seconds += duration
         lines.append(f"{idx:03d}  {reel} {track} {transition:<5} {src_in} {src_out} {rec_in} {rec_out}")
-        clip_name = event.get("clip_name") or event.get("media_path")
+        clip_name = _event_value(event, "clip_name", "media_path", "source_clip")
         if clip_name:
-            lines.append(f"* FROM CLIP NAME: {Path(clip_name).name}")
-        note = event.get("editor_note") or event.get("event")
+            lines.append(f"* FROM CLIP NAME: {Path(str(clip_name)).name}")
+        note = _event_value(event, "editor_note", "event", "comment", "notes")
         if note:
             lines.append(f"* NOTE: {note}")
         lines.append("")
@@ -262,7 +275,7 @@ def parse_screenplay_with_gemini(raw_text: str, project_id: str = "the-cyberneti
             from google.genai import types
             response = genai.Client(api_key=GOOGLE_API_KEY).models.generate_content(
                 model=PLANNER_MODEL,
-                contents=f"""Break this screenplay into production scenes. Return raw JSON array. Each scene must include scene_number, location, interior_exterior, time_of_day, characters, props, wardrobe, and shots with shot_number, shot_type, and requirements.\n\nSCREENPLAY:\n{raw_text}""",
+                contents=f"Break this screenplay into production scenes and return a raw JSON array with scene_number, location, interior_exterior, time_of_day, characters, props, wardrobe, and shots.\n\nSCREENPLAY:\n{raw_text}",
                 config=types.GenerateContentConfig(response_mime_type="application/json", temperature=0.2),
             )
             parsed = json.loads(response.text.strip())
@@ -298,8 +311,7 @@ def _normalize_scenes(scenes: list[dict], project_id: str) -> list[dict]:
 
 
 def parse_screenplay_text(raw_text: str, project_id: str = "the-cybernetic-courier") -> list[dict]:
-    """Deterministically parse standard screenplay sluglines into scene records."""
-    import re
+    """Deterministically parse screenplay sluglines into scene records."""
     if not raw_text or not raw_text.strip():
         return []
     slug = re.compile(r"^(?:SCENE\s+(\d+)\s*[-–—:]\s*)?(INT\.|EXT\.|INT/EXT\.|EXT/INT\.)\s+(.+?)(?:\s+[-–—]\s*([A-Za-z0-9_\s]+))?$", re.I)
@@ -308,13 +320,18 @@ def parse_screenplay_text(raw_text: str, project_id: str = "the-cybernetic-couri
         match = slug.match(line.strip())
         if match:
             if current:
-                current["raw_content"] = "\n".join(content); scenes.append(current)
-            explicit, ie, location, tod = match.groups(); number = int(explicit) if explicit else counter; counter = number + 1; content = []
+                current["raw_content"] = "\n".join(content)
+                scenes.append(current)
+            explicit, ie, location, tod = match.groups()
+            number = int(explicit) if explicit else counter
+            counter = number + 1
+            content = []
             current = {"project_id": project_id, "scene_number": number, "location": f"{ie} {location}".strip(), "interior_exterior": "INT" if "INT" in ie.upper() else "EXT", "time_of_day": (tod or "DAY").strip().upper(), "characters": [], "shots": [], "props": [], "wardrobe": []}
         elif current:
             content.append(line)
     if current:
-        current["raw_content"] = "\n".join(content); scenes.append(current)
+        current["raw_content"] = "\n".join(content)
+        scenes.append(current)
 
     known_chars = ["Neo", "Sarah", "Marcus", "Kira", "Detective Miller", "Enforcers", "Drone", "Courier"]
     prop_words = ["briefcase", "photograph", "flashlight", "crowbar", "plasma baton", "emp disruptor", "dossier", "coffee mug", "revolver", "terminal", "holoscreen", "tarp", "locker"]
@@ -337,10 +354,22 @@ def parse_screenplay_text(raw_text: str, project_id: str = "the-cybernetic-couri
 
 
 def compare_takes_split_screen(take_a: dict, take_b: dict) -> dict:
-    """Compare two takes and recommend the stronger editorial candidate."""
-    def score(take):
-        return (100 if take.get("requirements_met", False) else 30) + float(take.get("confidence", 0)) * 50 - len(take.get("deviations", []) or []) * 15 - len(take.get("issues", []) or []) * 20
+    """Compare two takes using objective production evidence."""
+    def score(take: dict) -> float:
+        return (
+            (100 if take.get("requirements_met", False) else 30)
+            + float(take.get("confidence", 0)) * 50
+            - len(take.get("deviations", []) or []) * 15
+            - len(take.get("issues", []) or []) * 20
+        )
     score_a, score_b = score(take_a), score(take_b)
     winner = take_a if score_a >= score_b else take_b
     deck = "A" if winner is take_a else "B"
-    return {"deck_a": take_a, "deck_b": take_b, "recommended_take_id": winner.get("take_id", f"DECK_{deck}"), "winning_deck": deck, "recommendation_rationale": f"Deck {deck} selected based on requirements compliance, confidence, deviations, and issues.", "cut_point_suggestion": f"Use {winner.get('take_id', 'selected take')} as the hero anchor cut from {winner.get('timecode_in', '01:00:00:00')} to {winner.get('timecode_out', '01:00:30:00') }"}
+    return {
+        "deck_a": take_a, "deck_b": take_b,
+        "recommended_take_id": winner.get("take_id", f"DECK_{deck}"),
+        "winning_deck": deck,
+        "score_a": score_a, "score_b": score_b,
+        "recommendation_rationale": "Selected from requirements compliance, confidence, deviations, and issues; creative preference remains with the filmmaker.",
+        "cut_point_suggestion": f"Use {winner.get('take_id', 'selected take')} from {winner.get('timecode_in', '01:00:00:00')} to {winner.get('timecode_out', '01:00:30:00')}",
+    }
