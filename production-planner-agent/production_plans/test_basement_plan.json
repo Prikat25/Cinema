@@ -1,0 +1,58 @@
+{
+  "title": "Basement Scene",
+  "total_scenes": 1,
+  "all_characters": [
+    "JOHN"
+  ],
+  "all_locations": [
+    "Basement"
+  ],
+  "all_props": [
+    "Flashlight"
+  ],
+  "all_wardrobe": [
+    "Leather jacket"
+  ],
+  "scenes": [
+    {
+      "scene_number": "1",
+      "heading": "INT. BASEMENT - NIGHT",
+      "location": "Basement",
+      "location_type": "INT",
+      "time_of_day": "NIGHT",
+      "summary": "John searches the dark basement.",
+      "characters": [
+        "JOHN"
+      ],
+      "props": [
+        "Flashlight"
+      ],
+      "wardrobe": [
+        "Leather jacket"
+      ],
+      "actions": [
+        "John turns on flashlight."
+      ],
+      "dialogue": [],
+      "shots": [
+        {
+          "shot_number": "1A",
+          "shot_type": "Close Up",
+          "camera_movement": "Handheld",
+          "angle": "Low Angle",
+          "description": "John's tense expression.",
+          "characters_in_shot": [
+            "JOHN"
+          ],
+          "shot_requirements": [
+            "Flashlight prop beam FX"
+          ]
+        }
+      ],
+      "shot_requirements": [
+        "Practical dark room lighting"
+      ]
+    }
+  ],
+  "created_at": "2026-09-03T12:00:00Z"
+}

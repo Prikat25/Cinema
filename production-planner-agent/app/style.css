@@ -1,0 +1,139 @@
+/* CineSupervisor Film Production Theme */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+html,
+body,
+[class*="css"],
+.stApp {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: radial-gradient(circle at 50% 0%, #172033 0%, #0b0f17 70%) !important;
+    color: #f1f5f9;
+}
+
+code,
+pre,
+.stCodeBlock {
+    font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Sidebar styling */
+[data-testid="stSidebar"] {
+    background-color: #0c1322 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Transform Radio Buttons into Interactive Pills */
+[data-testid="stSidebar"] [data-testid="stRadio"]>div {
+    gap: 6px;
+}
+
+[data-testid="stSidebar"] [data-testid="stRadio"] label {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    margin-bottom: 4px !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    cursor: pointer !important;
+    color: #cbd5e1 !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stRadio"] label:hover {
+    background: rgba(225, 29, 72, 0.15) !important;
+    border-color: rgba(225, 29, 72, 0.4) !important;
+    color: #ffffff !important;
+    transform: translateX(4px);
+}
+
+/* Hide plain round radio circle */
+[data-testid="stSidebar"] [data-testid="stRadio"] label>div:first-child {
+    display: none !important;
+}
+
+/* Active selected pill */
+[data-testid="stSidebar"] [data-testid="stRadio"] label:has(input:checked) {
+    background: linear-gradient(90deg, rgba(225, 29, 72, 0.3) 0%, rgba(225, 29, 72, 0.08) 100%) !important;
+    border: 1px solid #e11d48 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 12px rgba(225, 29, 72, 0.25) !important;
+    font-weight: 600 !important;
+}
+
+/* Cinema Buttons */
+.stButton>button {
+    background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 8px 18px !important;
+    box-shadow: 0 2px 10px rgba(225, 29, 72, 0.35) !important;
+    transition: all 0.2s ease !important;
+}
+
+.stButton>button:hover {
+    background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%) !important;
+    box-shadow: 0 4px 18px rgba(225, 29, 72, 0.5) !important;
+    transform: translateY(-1px);
+}
+
+/* Inputs & Textareas */
+input,
+textarea,
+select,
+.stTextInput>div>div>input {
+    background-color: #0e1726 !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 8px !important;
+    color: #f8fafc !important;
+}
+
+/* Metric Boxes */
+[data-testid="stMetric"] {
+    background: rgba(19, 27, 42, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+    backdrop-filter: blur(8px);
+}
+
+[data-testid="stMetricValue"] {
+    font-size: 1.8rem !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+}
+
+/* Chat Messages */
+[data-testid="stChatMessage"] {
+    background: rgba(19, 27, 42, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px !important;
+    padding: 14px 18px !important;
+    margin-bottom: 12px !important;
+}
+
+/* Tables */
+[data-testid="stTable"] table {
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    width: 100%;
+}
+
+[data-testid="stTable"] th {
+    background: #0f172a !important;
+    color: #94a3b8 !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 10px 14px !important;
+}
+
+[data-testid="stTable"] td {
+    padding: 10px 14px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+    background: rgba(15, 23, 42, 0.5) !important;
+    color: #e2e8f0 !important;
+}

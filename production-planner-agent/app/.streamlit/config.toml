@@ -1,0 +1,10 @@
+[theme]
+base = "dark"
+primaryColor = "#e11d48"              # Film production crimson accent
+backgroundColor = "#0b0f17"           # Deep cinematic slate/black
+secondaryBackgroundColor = "#131b2a"  # Sidebar and card background
+textColor = "#f1f5f9"                 # High-contrast text
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"

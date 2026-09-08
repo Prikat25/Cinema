@@ -1,0 +1,230 @@
+{
+  "all_wardrobe": [
+    {
+      "costume_description": "Reflective cybernetic jacket, weather-resistant tactical wear",
+      "character_name": "NEO"
+    },
+    {
+      "costume_description": "Dark tech-visor, futuristic comm-headset, hacker/operator attire",
+      "character_name": "KIRA"
+    },
+    {
+      "costume_description": "Heavy tactical combat armor, helmets, visors",
+      "character_name": "ENFORCER 1 & 2"
+    }
+  ],
+  "scenes": [
+    {
+      "scene_number": 1,
+      "time_of_day": "DUSK",
+      "shots": [
+        {
+          "shot_type": "Wide Shot",
+          "description": "Wide establishing shot of the neon-lit alleyway, rain pouring on wet asphalt. Neo sprints into frame.",
+          "shot_number": "1A",
+          "camera_movement": "Pan Left",
+          "characters_in_shot": [
+            "NEO"
+          ],
+          "shot_requirements": "Rain machine, neon practical lighting, wet-down crew",
+          "dialogue_snippet": "",
+          "angle": "Eye Level"
+        },
+        {
+          "angle": "Low Angle",
+          "characters_in_shot": [
+            "NEO",
+            "ENFORCERS"
+          ],
+          "shot_requirements": "Steadicam rig, waterproof housing, stunt coordination",
+          "shot_type": "Medium Close-Up",
+          "camera_movement": "Steadicam Tracking",
+          "description": "Tracking shot running behind and beside Neo as he clutches the glowing chrome briefcase. Enforcers pursue in the background with raised plasma batons.",
+          "shot_number": "1B",
+          "dialogue_snippet": "Kira, I've got heat! Unlock the dock door now!"
+        }
+      ],
+      "action_beats": [
+        "Neo sprints through a wet, neon-lit alleyway carrying a glowing briefcase while pursued by armed Enforcers.",
+        "Neo contacts Kira via wrist comm for extraction."
+      ],
+      "characters_in_scene": [
+        "NEO",
+        "ENFORCERS"
+      ],
+      "location": "NEO-TOKYO ALLEYWAY",
+      "dialogue_snippets": [
+        {
+          "line": "Kira, I've got heat! Unlock the dock door now!",
+          "character": "NEO"
+        }
+      ],
+      "interior_exterior": "EXT"
+    },
+    {
+      "characters_in_scene": [
+        "KIRA"
+      ],
+      "location": "CONTROL ROOM",
+      "interior_exterior": "INT",
+      "dialogue_snippets": [
+        {
+          "character": "KIRA",
+          "line": "Door 4 is open, Neo! Watch the drone above you!"
+        }
+      ],
+      "shots": [
+        {
+          "angle": "Eye Level",
+          "camera_movement": "Dolly In",
+          "dialogue_snippet": "Door 4 is open, Neo! Watch the drone above you!",
+          "description": "Medium shot of Kira at her holographic keyboard, multiple floating video feeds reflecting on her tech-visor.",
+          "shot_number": "2A",
+          "shot_requirements": "Holographic CGI elements added in post-production, interactive screen lighting on actress",
+          "shot_type": "Medium Shot",
+          "characters_in_shot": [
+            "KIRA"
+          ]
+        }
+      ],
+      "action_beats": [
+        "Kira frantically taps at a holographic keyboard in a dark control room, monitoring multiple video feeds and guiding Neo."
+      ],
+      "scene_number": 2,
+      "time_of_day": "CONTINUOUS"
+    },
+    {
+      "time_of_day": "CONTINUOUS",
+      "characters_in_scene": [
+        "NEO",
+        "SURVEILLANCE DRONE"
+      ],
+      "scene_number": 3,
+      "shots": [
+        {
+          "camera_movement": "Static",
+          "shot_type": "Wide Shot",
+          "angle": "High Angle",
+          "dialogue_snippet": "",
+          "description": "Neo slides across the bonnet of a parked hover-car as a surveillance drone descends from above with a harsh spotlight.",
+          "shot_number": "3A",
+          "characters_in_shot": [
+            "NEO"
+          ],
+          "shot_requirements": "Stunt double for car slide, specialized vehicle prop"
+        },
+        {
+          "angle": "Eye Level",
+          "characters_in_shot": [
+            "NEO"
+          ],
+          "description": "Close-up on Neo drawing the EMP disruptor from his holster, aiming upward.",
+          "shot_number": "3B",
+          "dialogue_snippet": "",
+          "camera_movement": "Pan Right",
+          "shot_type": "Close-Up",
+          "shot_requirements": "Prop weapon with LED muzzle effect"
+        },
+        {
+          "shot_type": "Medium Close-Up",
+          "characters_in_shot": [
+            "NEO",
+            "SURVEILLANCE DRONE"
+          ],
+          "camera_movement": "Static",
+          "dialogue_snippet": "Door reached!",
+          "angle": "Low Angle",
+          "shot_requirements": "CGI drone explosion/spark effects, breakaway trash cans, stunt wire rig for drone crash",
+          "description": "Blue energy wave pulses from disruptor, hitting the drone. Drone sparks, short-circuits, and crashes into alley trash cans. Neo finishes at the door.",
+          "shot_number": "3C"
+        }
+      ],
+      "action_beats": [
+        "Neo slides across a hover-car bonnet. A surveillance drone descends, pinning him with a spotlight.",
+        "Neo draws an EMP disruptor and disables the drone, which crashes into trash cans."
+      ],
+      "location": "NEO-TOKYO ALLEYWAY",
+      "interior_exterior": "EXT",
+      "dialogue_snippets": [
+        {
+          "character": "NEO",
+          "line": "Door reached!"
+        }
+      ]
+    }
+  ],
+  "all_props": [
+    {
+      "description": "Glowing chrome briefcase carried by Neo",
+      "category": "Tech/Prop",
+      "prop_name": "Glowing Chrome Briefcase"
+    },
+    {
+      "category": "Tech/Prop",
+      "prop_name": "Wrist Comm",
+      "description": "Wrist communication device used by Neo"
+    },
+    {
+      "description": "Heavy tactical batons emitting plasma energy",
+      "prop_name": "Plasma Batons",
+      "category": "Weapon"
+    },
+    {
+      "category": "Tech/Prop",
+      "description": "Futuristic comm-headset and dark tech-visor",
+      "prop_name": "Tech-Visor & Headset"
+    },
+    {
+      "prop_name": "Holographic Keyboard",
+      "category": "Tech/Prop",
+      "description": "Interactive floating holographic keyboard/monitors"
+    },
+    {
+      "description": "Parked futuristic hover-car",
+      "prop_name": "Hover-Car",
+      "category": "Vehicle/Prop"
+    },
+    {
+      "description": "Handgun-sized energy disruptor firing blue pulse waves",
+      "category": "Weapon",
+      "prop_name": "EMP Disruptor"
+    }
+  ],
+  "total_scenes": 3,
+  "all_characters": [
+    {
+      "role_type": "Lead",
+      "actor_requirements": "Athletic, stunt-capable, male, 30s",
+      "character_name": "NEO"
+    },
+    {
+      "role_type": "Supporting",
+      "character_name": "KIRA",
+      "actor_requirements": "Tech-savvy appearance, female, 20s"
+    },
+    {
+      "actor_requirements": "Imposing build, tactical gear, stunt-capable, roles 1 & 2",
+      "role_type": "Background / Minor Speaking",
+      "character_name": "ENFORCERS"
+    },
+    {
+      "role_type": "CGI / Prop",
+      "character_name": "SURVEILLANCE DRONE",
+      "actor_requirements": "CGI / Rigged drone"
+    }
+  ],
+  "all_locations": [
+    {
+      "location_name": "NEO-TOKYO ALLEYWAY",
+      "environmental_notes": "Wet asphalt, neon lighting, rain FX",
+      "interior_exterior": "EXT"
+    },
+    {
+      "environmental_notes": "Holographic UI displays, dark ambient lighting",
+      "interior_exterior": "INT",
+      "location_name": "CONTROL ROOM"
+    }
+  ],
+  "title": "THE CYBERNETIC COURIER",
+  "created_at": "2026-09-03T18:34:36.892755+00:00"
+}
