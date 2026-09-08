@@ -7,6 +7,7 @@ logic stays in the shared tools and ADK agents.
 from __future__ import annotations
 
 import asyncio
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -16,7 +17,6 @@ from google.adk.runners import Runner
 from google.genai import types
 
 from app.agent import app as adk_app
-from app.agent import root_agent
 from app.config import APP_NAME, DEFAULT_MODEL
 from app.tools import (
     ensure_clickhouse_tables,
@@ -29,8 +29,7 @@ from app.ui import load_styles, page_header, render_metric_row, status_badge
 
 load_dotenv()
 
-APP_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = APP_DIR.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 st.set_page_config(
     page_title="CineSupervisor AI",
@@ -56,8 +55,11 @@ async def run_supervisor(prompt: str) -> str:
     """Run the central ADK agent for one Streamlit request."""
     from google.adk.sessions import InMemorySessionService
 
-    session_service = InMemorySessionService()
-    runner = Runner(app=adk_app, session_service=session_service, auto_create_session=True)
+    runner = Runner(
+        app=adk_app,
+        session_service=InMemorySessionService(),
+        auto_create_session=True,
+    )
     content = types.Content(role="user", parts=[types.Part(text=prompt)])
     response_text = ""
     async for event in runner.run_async(
@@ -159,15 +161,20 @@ with editor_tab:
     )
     if st.button("Generate EDL", type="primary"):
         try:
-            parsed = __import__("json").loads(events)
+            parsed = json.loads(events)
             if not isinstance(parsed, list):
                 raise ValueError("Expected a JSON array")
             st.session_state.edl = format_edit_decision_list(parsed)
-        except (ValueError, __import__("json").JSONDecodeError) as exc:
+        except (ValueError, json.JSONDecodeError) as exc:
             st.error(f"Invalid editorial events: {exc}")
     if st.session_state.get("edl"):
         st.code(st.session_state.edl, language="text")
-        st.download_button("Download EDL", st.session_state.edl, "cine_supervisor_assembly.edl", "text/plain")
+        st.download_button(
+            "Download EDL",
+            st.session_state.edl,
+            "cine_supervisor_assembly.edl",
+            "text/plain",
+        )
 
 with chat_tab:
     st.subheader("Ask CineSupervisor")
