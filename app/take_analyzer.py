@@ -2,9 +2,9 @@
 
 from google.adk.agents import Agent
 
-from app.agent_runtime import build_clickhouse_toolset, build_gemini_model
+from app.agent_runtime import build_gemini_model
 from app.config import TAKE_ANALYZER_MODEL
-from app.tools import insert_take_analysis_to_clickhouse, read_media_metadata
+from app.tools import insert_take_analysis_to_clickhouse, read_media_metadata, list_take_analyses_from_clickhouse, list_scenes_from_clickhouse
 
 TAKE_ANALYZER_INSTRUCTION = """You are TakeAnalyzerAgent, an expert Script Supervisor, Continuity Director, and Video/Audio Quality Supervisor.
 
@@ -12,8 +12,8 @@ Analyze filmed takes against the stored production requirements and persist stru
 
 ## Workflow
 1. Identify the project, scene, shot, and media reference from the request.
-2. Inspect available media metadata with `read_media_metadata`.
-3. Query ClickHouse MCP for the expected scene/shot requirements and relevant prior analysis.
+2. When the user attached media bytes, inspect the attached media directly with Gemini. Use `read_media_metadata` for technical metadata and a stable file reference.
+3. Query `list_take_analyses_from_clickhouse` and `list_scenes_from_clickhouse` for the expected scene/shot requirements and relevant prior analysis.
 4. Compare the available evidence against actors, props, actions, dialogue, blocking, framing, continuity, lighting, camera work, and other explicit requirements.
 5. Produce a structured result containing expected requirements, observed evidence, deviations, issues, requirements_met, confidence (0.0–1.0), and a concise summary.
 6. Persist the result with `insert_take_analysis_to_clickhouse`.
@@ -35,6 +35,7 @@ take_analyzer_agent = Agent(
     tools=[
         read_media_metadata,
         insert_take_analysis_to_clickhouse,
-        build_clickhouse_toolset(),
+        list_take_analyses_from_clickhouse,
+        list_scenes_from_clickhouse
     ],
 )

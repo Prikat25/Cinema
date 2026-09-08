@@ -8,6 +8,7 @@ from app.editor_assistant import editor_assistant_agent
 from app.production_planner import production_planner_agent
 from app.take_analyzer import take_analyzer_agent
 from app.agent_runtime import build_gemini_model
+from google.adk.agents.context_cache_config import ContextCacheConfig
 
 SUPERVISOR_INSTRUCTION = """You are CineSupervisor, the central AI film production supervisor.
 
@@ -52,4 +53,10 @@ root_agent = Agent(
     sub_agents=[production_planner_agent, take_analyzer_agent, editor_assistant_agent],
 )
 
-app = App(root_agent=root_agent, name=APP_NAME)
+app = App(root_agent=root_agent, name=APP_NAME,
+            context_cache_config=ContextCacheConfig(
+                    min_tokens=8192,
+                    ttl_seconds=3600,
+                    cache_intervals=10,
+                ),
+        )

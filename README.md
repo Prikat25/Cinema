@@ -1,7 +1,16 @@
-# production-supervisor-agent
+ ## CineSupervisor
 
-Simple ReAct agent
-Agent generated with `agents-cli` version `1.5.0`
+CineSupervisor is a Streamlit production-control interface backed by a multi-agent
+film-production supervisor. 
+
+Use it to:
+
+- Turn a screenplay into a scene breakdown
+- Inspect media metadata
+- Generate editorial decision lists (EDLs)
+- Analyze takes
+- Ask operational questions of the production supervisor
+- Query production data directly from ClickHouse using `clickhouse_connect`
 
 ## Project Structure
 
@@ -11,9 +20,9 @@ production-supervisor-agent/
 │   ├── agent.py               # Main agent logic
 │   ├── production_planner.py  # Production planner agent logic
 │   ├── take_analyzer.py       # Take analyzer agent logic
-│   ├── fast_api_app.py        # FastAPI Backend server
 │   └── app_utils/             # App utilities and helpers
 ├── tests/                     # Unit, integration, and load tests
+├── .env.example                # Environment variable template
 ├── GEMINI.md                  # AI-assisted development guide
 └── pyproject.toml             # Project dependencies
 ```
@@ -27,6 +36,16 @@ Before you begin, ensure you have:
 - **agents-cli**: Agents CLI - Install with `uv tool install google-agents-cli`
 - **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
 
+# Environment Variables
+
+Before running or testing the application, create a local .env file from the
+provided example:
+
+```bash
+cp .env.example .env
+```
+
+Then update .env with the required values for your environment(ClickHouse, Gemini API, Google Cloud). Never commit .env or credentials/secrets to source control.
 
 ## Quick Start
 
@@ -41,11 +60,21 @@ Install required packages:
 ```bash
 agents-cli install
 ```
+If the project uses the application requirements file:
+
+```bash
+pip install -r app/requirements.txt
+```
 
 Test the agent with a local web server:
 
 ```bash
-agents-cli playground
+agents-cli playground (for Agents)
+```
+Or run the Streamlit UI:
+
+```bash
+streamlit run app/streamlit_app.py (for UI with Agent Runner)
 ```
 
 You can also use features from the [ADK](https://adk.dev/) CLI with `uv run adk`.
@@ -60,19 +89,17 @@ You can also use features from the [ADK](https://adk.dev/) CLI with `uv run adk`
 | `agents-cli eval`    | Evaluate agent behavior (generate, grade, analyze, and more — see `agents-cli eval --help`) |
 | `uv run pytest tests/unit tests/integration` | Run unit and integration tests                                                        || [A2A Inspector](https://github.com/a2aproject/a2a-inspector) | Launch A2A Protocol Inspector                                                        |
 
-## 🛠️ Project Management
-
-| Command | What It Does |
-|---------|--------------|
-| `agents-cli scaffold enhance` | Add CI/CD pipelines and Terraform infrastructure |
-| `agents-cli infra cicd` | One-command setup of entire CI/CD pipeline + infrastructure |
-| `agents-cli scaffold upgrade` | Auto-upgrade to latest version while preserving customizations |
-
 ---
 
 ## Development
 
 Edit your agent logic in `app/agent.py` and test with `agents-cli playground` - it auto-reloads on save.
+
+## Run unit and integration tests:
+
+```bash
+uv run pytest tests/unit tests/integration
+```
 
 ## Deployment
 
@@ -80,15 +107,3 @@ Edit your agent logic in `app/agent.py` and test with `agents-cli playground` - 
 gcloud config set project <your-project-id>
 agents-cli deploy
 ```
-
-To add CI/CD and Terraform, run `agents-cli scaffold enhance`.
-To set up your production infrastructure, run `agents-cli infra cicd`.
-
-## Observability
-
-Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
-
-## A2A Inspector
-
-This agent supports the [A2A Protocol](https://a2a-protocol.org/). Use the [A2A Inspector](https://github.com/a2aproject/a2a-inspector) to test interoperability.
-See the [A2A Inspector docs](https://github.com/a2aproject/a2a-inspector) for details.

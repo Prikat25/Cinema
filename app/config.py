@@ -22,13 +22,13 @@ CLICKHOUSE_HOST = os.getenv("CLICKHOUSE_HOST")
 CLICKHOUSE_PORT = int(os.getenv("CLICKHOUSE_PORT", "8123"))
 CLICKHOUSE_USER = os.getenv("CLICKHOUSE_USER", "default")
 CLICKHOUSE_PASSWORD = os.getenv("CLICKHOUSE_PASSWORD", "")
-CLICKHOUSE_SECURE = os.getenv("CLICKHOUSE_SECURE", "true").lower() in {"true", "1", "yes"}
+CLICKHOUSE_SECURE = os.getenv("CLICKHOUSE_SECURE", "True")
 CLICKHOUSE_MCP_URL = os.getenv("CLICKHOUSE_MCP_URL", "https://mcp.clickhouse.cloud/mcp")
 
 ALLOW_ORIGINS = os.getenv("ALLOW_ORIGINS", "*")
 
 # Model configuration. Override these in Cloud Run when needed.
-DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gemini-2.5-flash")
+DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gemini-3.5-flash-lite")
 SUPERVISOR_MODEL = os.getenv("SUPERVISOR_MODEL", DEFAULT_MODEL)
 PLANNER_MODEL = os.getenv("PLANNER_MODEL", DEFAULT_MODEL)
 TAKE_ANALYZER_MODEL = os.getenv("TAKE_ANALYZER_MODEL", DEFAULT_MODEL)

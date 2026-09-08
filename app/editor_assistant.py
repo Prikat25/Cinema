@@ -2,13 +2,15 @@
 
 from google.adk.agents import Agent
 
-from app.agent_runtime import build_clickhouse_toolset, build_gemini_model
+from app.agent_runtime import build_gemini_model
 from app.config import EDITOR_MODEL
 from app.tools import (
     compare_takes_split_screen,
     format_edit_decision_list,
     get_clip_timecode_range,
     read_media_metadata,
+    list_take_analyses_from_clickhouse,
+    list_scenes_from_clickhouse
 )
 
 EDITOR_ASSISTANT_INSTRUCTION = """You are EditorAssistantAgent, an expert Film Editor, Assistant Editor, and Post-Production Supervisor.
@@ -24,7 +26,7 @@ Use production records and available media metadata to help assemble a rough edi
 - Give NLE-neutral rough-cut instructions that can be applied in Premiere, DaVinci Resolve, Avid, or similar tools.
 
 ## Workflow
-1. Query ClickHouse MCP for relevant scenes and take analyses.
+1. Query `list_scenes_from_clickhouse` and `list_take_analyses_from_clickhouse` for relevant scenes and take analyses.
 2. Gather only media references supported by production data or available metadata.
 3. Compare candidates using objective evidence first.
 4. Return selected/candidate takes, timecodes, sequence order, editorial rationale, and continuity warnings.
@@ -43,6 +45,7 @@ editor_assistant_agent = Agent(
         get_clip_timecode_range,
         compare_takes_split_screen,
         format_edit_decision_list,
-        build_clickhouse_toolset(),
+        list_take_analyses_from_clickhouse,
+        list_scenes_from_clickhouse
     ],
 )

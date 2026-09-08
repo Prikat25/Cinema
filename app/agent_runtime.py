@@ -1,7 +1,7 @@
 """Shared construction helpers for CineSupervisor ADK agents."""
 
 from google.adk.models import Gemini
-from google.adk.tools.mcp_tool import McpToolset
+from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 from google.genai import types
 
@@ -16,8 +16,12 @@ def build_gemini_model(model_name: str) -> Gemini:
     )
 
 
-def build_clickhouse_toolset() -> McpToolset:
-    """Create a ClickHouse MCP toolset for an individual agent."""
-    return McpToolset(
-        connection_params=StreamableHTTPConnectionParams(url=CLICKHOUSE_MCP_URL)
-    )
+# def build_clickhouse_toolset() -> McpToolset:
+#     """Create a ClickHouse MCP toolset for an individual agent."""
+#     return McpToolset(
+#         connection_params=StreamableHTTPConnectionParams(url=CLICKHOUSE_MCP_URL,
+#         headers={
+#                 "Authorization": f"Bearer {CLICKHOUSE_MCP_TOKEN}",
+#             },
+#         )
+#     )

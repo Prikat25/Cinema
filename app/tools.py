@@ -33,6 +33,7 @@ def get_clickhouse_client():
         username=CLICKHOUSE_USER or "default",
         password=CLICKHOUSE_PASSWORD or "",
         secure=CLICKHOUSE_SECURE,
+        verify=False,
     )
     return _client
 
@@ -70,6 +71,91 @@ def ensure_clickhouse_tables(client=None):
     """)
     _tables_initialized = True
 
+def list_scenes_from_clickhouse(project_id: str) -> list[dict[str, Any]]:
+    """Return the current scene registry for a project without mutating it."""
+    try:
+        client = get_clickhouse_client()
+        ensure_clickhouse_tables(client)
+        result = client.query(
+            """
+            SELECT scene_number, location, time_of_day, characters, scene_data
+            FROM script_scenes
+            WHERE project_id = %(project_id)s
+            ORDER BY scene_number
+            """,
+            parameters={"project_id": project_id},
+        )
+    except Exception:
+        return []
+
+    scenes = []
+    for scene_number, location, time_of_day, characters, scene_data in result.result_rows:
+        try:
+            payload = json.loads(scene_data)
+        except (TypeError, json.JSONDecodeError):
+            payload = {}
+        scenes.append(
+            {
+                "project_id": project_id,
+                "scene_number": scene_number,
+                "location": location,
+                "interior_exterior": payload.get("interior_exterior", "INT"),
+                "time_of_day": time_of_day,
+                "characters": characters,
+                "shots": payload.get("shots", []),
+                "props": [item.get("prop_name", str(item)) for item in payload.get("props_needed", [])],
+                "wardrobe": [
+                    item.get("costume_description", str(item))
+                    for item in payload.get("wardrobe_needed", [])
+                ],
+            }
+        )
+    return scenes
+
+
+def list_take_analyses_from_clickhouse(project_id: str) -> list[dict[str, Any]]:
+    """Return persisted take analyses for a project without mutating them."""
+    try:
+        client = get_clickhouse_client()
+        ensure_clickhouse_tables(client)
+        result = client.query(
+            """
+            SELECT take_id, scene_number, shot_number, requirements_met, confidence, analysis_data
+            FROM take_analyses
+            WHERE project_id = %(project_id)s
+            ORDER BY scene_number, shot_number, take_id
+            """,
+            parameters={"project_id": project_id},
+        )
+    except Exception:
+        return []
+
+    takes = []
+    for take_id, scene_number, shot_number, requirements_met, confidence, analysis_data in result.result_rows:
+        try:
+            payload = json.loads(analysis_data)
+        except (TypeError, json.JSONDecodeError):
+            payload = {}
+        takes.append(
+            {
+                "take_id": take_id,
+                "project_id": project_id,
+                "scene_number": scene_number,
+                "shot_number": shot_number,
+                "media_path": payload.get("media_path", ""),
+                "timecode_in": payload.get("timecode_in", "Unknown"),
+                "timecode_out": payload.get("timecode_out", "Unknown"),
+                "framing": payload.get("framing", "Unspecified"),
+                "requirements_met": bool(requirements_met),
+                "confidence": float(confidence),
+                "actors": payload.get("detected_actors", payload.get("actors", [])),
+                "props": payload.get("detected_props", payload.get("props", [])),
+                "deviations": payload.get("deviations", []),
+                "issues": payload.get("issues", []),
+                "summary": payload.get("analysis_summary", payload.get("summary", "")),
+            }
+        )
+    return takes
 
 def seconds_to_smpte(seconds: float, fps: float = 24.0) -> str:
     """Convert seconds to HH:MM:SS:FF SMPTE timecode."""
