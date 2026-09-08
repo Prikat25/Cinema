@@ -1,57 +1,41 @@
-# ruff: noqa
-from google.adk.agents import Agent
-from google.adk.models import Gemini
-from google.adk.tools.mcp_tool import McpToolset
-from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
-from google.genai import types
+"""ADK production-planning subagent."""
 
+from google.adk.agents import Agent
+
+from app.agent_runtime import build_clickhouse_toolset, build_gemini_model
 from app.config import PLANNER_MODEL
-from app.tools import insert_scene_to_clickhouse, read_screenplay_file
+from app.tools import insert_scene_to_clickhouse, parse_screenplay_text, read_screenplay_file
 
 SYSTEM_INSTRUCTION = """You are ProductionPlannerAgent, an expert Line Producer, Assistant Director, and Film Production Supervisor.
 
-Your primary duty is to analyze screenplay text directly using Gemini generative intelligence, extract comprehensive breakdown requirements, insert each scene breakdown into ClickHouse table `script_scenes` using `insert_scene_to_clickhouse`, and summarize the final production plan using ClickHouse MCP tools.
+Break screenplay material into actionable production requirements and persist the structured scene breakdown to ClickHouse.
 
-### Core Capabilities
-1. Analyze screenplay structure, scene headings, lighting, emotional beats, characters, dialogue and actions.
-2. Extract production assets: characters, props, wardrobe and camera coverage.
-3. Persist structured scene records into `script_scenes`.
+## Responsibilities
+- Identify scenes, locations, INT/EXT, time of day, characters, actions, dialogue, props, wardrobe, and camera coverage.
+- Create shot-level requirements including shot number, shot type, camera movement, and required story/production details.
+- Persist one structured record per scene in `script_scenes` using `insert_scene_to_clickhouse`.
+- Use ClickHouse MCP to verify stored production-plan coverage after persistence.
 
-### ClickHouse schema
-```sql
-CREATE TABLE script_scenes
-(
-    project_id String,
-    scene_number UInt16,
-    location String,
-    time_of_day LowCardinality(String),
-    characters Array(String),
-    scene_data String
-) ENGINE = MergeTree()
-PRIMARY KEY (project_id, scene_number);
-```
+## Workflow
+1. Read the supplied screenplay with `read_screenplay_file` when a file path is provided.
+2. Parse/structure the screenplay. Use `parse_screenplay_text` for deterministic baseline extraction; enrich it with your own reasoning where appropriate.
+3. For every scene, build complete `scene_data` JSON containing scene_number, location, interior_exterior, time_of_day, characters_in_scene, shots, props_needed, and wardrobe_needed.
+4. Persist each scene with `insert_scene_to_clickhouse`.
+5. Verify the stored records with ClickHouse MCP.
+6. Return a concise production-plan summary and clearly state any inferred or uncertain requirements.
 
-### scene_data JSON
-For each scene construct a valid JSON string containing scene_number, location, interior_exterior, time_of_day, characters_in_scene, shots, props_needed, and wardrobe_needed. Each shot should include shot_number, shot_type, camera_movement, and shot_requirements. Props and wardrobe should include descriptive names and categories where appropriate.
-
-### Workflow
-1. Parse the screenplay into distinct scenes using Gemini reasoning or the available screenplay tools.
-2. For every scene extract project_id, scene_number, location, time_of_day, characters and scene_data.
-3. Call `insert_scene_to_clickhouse(...)` for each structured scene.
-4. Query ClickHouse to verify coverage after insertion.
-5. Present a concise production-plan summary grounded in the stored records.
+Never claim a requirement is explicitly present when it was only inferred. Keep production facts separate from planning recommendations.
 """
-
-clickhouse_mcp_toolset = McpToolset(
-    connection_params=StreamableHTTPConnectionParams(url="https://mcp.clickhouse.cloud/mcp")
-)
 
 production_planner_agent = Agent(
     name="production_planner_agent",
-    model=Gemini(
-        model=PLANNER_MODEL,
-        retry_options=types.HttpRetryOptions(initial_delay=1, attempts=3),
-    ),
+    model=build_gemini_model(PLANNER_MODEL),
+    description="Breaks screenplays into persistent scene and shot production requirements.",
     instruction=SYSTEM_INSTRUCTION,
-    tools=[read_screenplay_file, insert_scene_to_clickhouse, clickhouse_mcp_toolset],
+    tools=[
+        read_screenplay_file,
+        parse_screenplay_text,
+        insert_scene_to_clickhouse,
+        build_clickhouse_toolset(),
+    ],
 )
