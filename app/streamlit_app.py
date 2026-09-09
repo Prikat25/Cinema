@@ -315,6 +315,9 @@ def render_supervisor() -> None:
 def render_wrap_status() -> None:
     page_header("Scene Wrap Status", "Verify every required shot before releasing a set or moving locations.")
     scenes = st.session_state.production_scenes
+    if len(scenes) < 1:
+        st.info("At least one persisted scene is required for comparison.")
+        return
     selected = st.selectbox("Scene", [scene["scene_number"] for scene in scenes])
     # scene = next(item for item in scenes if item["scene_number"] == selected)
     scene = next((item for item in scenes if str(item["scene_number"]) == str(selected)), None)
